@@ -1,101 +1,85 @@
-// SERVER-SIDE JAVASCRIPT
+var express = require("express");
+var app= express();
+var bodyParser = require('body-parser');
+var _ = require("underscore");
 
-// require express and other modules
-var express = require('express'),
-    app = express(),
-    bodyParser = require('body-parser'),
-    _ = require("underscore");
 
-// serve js and css files from public folder
-// app.use(express.static(__dirname + '/public'));
+// parse application/x-www-form-urlencoded 
+app.use(bodyParser.urlencoded({ extended: false }));
 
-// configure bodyParser (for handling data)
-app.use(bodyParser.urlencoded({extended: false}))
 // parse application/json 
-app.use(bodyParser.json())
-// pre-seeded phrase data
-var phrases = [
-  {id: 1, word: 'REPL', definition: 'Read, Eval, Print, Loop'},
-  {id: 2, word: 'Reference Type', definition: 'Any data type that is not a primitive type'},
-  {id: 3, word: 'Constructor', definition: 'Function used as a blueprint to create a new object with specified properties and methods'},
-  {id: 4, word: 'Callback', definition: 'Function passed as an argument to another function'},
-  {id: 5, word: 'Query string', definition: 'A list of parameters (represented as key-value pairs) appended to the end of a URL string'},
-  {id: 6, word: 'Query string', definition: 'A list of parameters (represented as key-value pairs) appended to the end of a URL string'}
+app.use(bodyParser.json());
+
+
+var users = [
+    {
+        id: 1,
+        username: "Jake",
+        firstname: "Jake",
+        lastname: "Donovan",
+        age: 34
+
+    },
+    {
+        id: 2,
+        username: "Tom",
+        firstname: "Tommy",
+        lastname: "Jones",
+        age: 34
+    },
+    {
+        id: 3,
+        username: "bill",
+        firstname: "Bill",
+        lastname: "Jackson",
+        age: 34
+    }
 
 ];
 
-// ROUTES
-// root route (serves index.html)
-// app.get('/', function (req, res) {
-//   res.sendFile(__dirname + '/public/views/index.html');
-// });
-
-// phrases index
-app.get('/phrases', function (req, res) {
-  // send all phrases as JSON response
-  var newPhrase = req.body;
-  phrases.push(newPhrase)
-  res.json(phrases);
+app.get('/usernames', function (req, res) {
+ res.json(users)
 });
 
-// create new phrase
-app.post('/phrases', function (req, res) {
-  // grab params (word and definition) from form data
-  var newPhrase = req.body;
-  
-  // set sequential id (last id in `phrases` array + 1)
-  if (phrases.length > 0) {
-    newPhrase.id = phrases[phrases.length - 1].id +  1;
-  } else {
-    newPhrase.id = 0;
-  }
+app.post('/usernames', function(req, res){
+    var newUser = req.body;
+        users.push(newUser);
+        res.json(users);
+});
+app.put('/usernames/:id', function(req, res) {
 
-  // add newPhrase to `phrases` array
-  phrases.push(newPhrase);
-  
-  // send newPhrase as JSON response
-  res.json(newPhrase);
+ // set the value of the id
+ var targetId = parseInt(req.params.id);
+
+ // find item in `Users` array matching the id
+ var foundUser = _.findWhere(users, {id: targetId});
+
+ // if form gave us a new firstname, update the User's firstname
+ foundUser.firstname = req.body.firstname || foundUser.firstname;
+
+ // if form gave us a new age, update that
+ foundUser.age = req.body.age || foundUser.age;
+
+ // send back edited object
+ res.json(foundUser);
 });
 
-// update phrase
-// app.put('/phrases/:id', function(req, res) {
+app.delete('/usernames/:id', function(req, res) {
 
-//   // set the value of the id
-//   var targetId = parseInt(req.params.id);
-//   // find item in `phrases` array matching the id
-//   var foundPhrase = _.findWhere(phrases, {id: targetId});
+ // set the value of the id
+ var targetId = parseInt(req.params.id);
 
-//   // update the phrase's word
-//   foundPhrase.word = req.body.word;
+ // find item in `users` array matching the id
+ var foundUser = _.findWhere(users, {id: targetId});
 
-//   // update the phrase's definition
-//   foundPhrase.definition = req.body.definition;
+ // get the index of the found item
+ var index = users.indexOf(foundUser);
 
-//   // send back edited object
-//   res.json(foundPhrase);
+ // remove the item at that index, only remove 1 item
+ users.splice(index, 1);
 
-// });
-
-// // delete phrase
-// app.delete('/phrases/:id', function(req, res) {
-
-//   // set the value of the id
-//   var targetId = parseInt(req.params.id);
-
-//   // find item in `phrases` array matching the id
-//   var foundPhrase = _.findWhere(phrases, {id: targetId});
-
-//   // get the index of the found item
-//   var index = phrases.indexOf(foundPhrase);
-
-//   // remove the item at that index, only remove 1 item
-//   phrases.splice(index, 1);
-
-//   // send back deleted object
-//   res.json(foundPhrase);
-// });
-
-// set server to localhost:3000
-app.listen(5000, function () {
-  console.log('server started on localhost:5000');
+ // send back deleted object
+ res.json(foundUser);
 });
+
+app.listen(3000);
